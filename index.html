@@ -40,6 +40,89 @@
   <link rel="preload" as="image" href="swapped_colors.webp" type="image/webp">
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+    
+<script>
+    // 1. جلب اسم الصفحة تلقائياً
+    const pageTitle = document.title || window.location.pathname;
+
+    // 2. جلب اسم الدولة تلقائياً باللغة العربية عبر إعدادات المتصفح الإقليمية للمستخدم
+    let userCountry = "العراق"; // القيمة الافتراضية
+    try {
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (timeZone) {
+            // تحويل المناطق الزمنية إلى أسماء دول عربية واضحة ومباشرة
+            if (timeZone.includes("Baghdad")) userCountry = "العراق";
+            else if (timeZone.includes("Riyadh")) userCountry = "السعودية";
+            else if (timeZone.includes("Cairo")) userCountry = "مصر";
+            else if (timeZone.includes("Amman")) userCountry = "الأردن";
+            else if (timeZone.includes("Damascus")) userCountry = "سوريا";
+            else if (timeZone.includes("Kuwait")) userCountry = "الكويت";
+            else if (timeZone.includes("Dubai") || timeZone.includes("Abu_Dhabi")) userCountry = "الإمارات";
+            else if (timeZone.includes("Asia") || timeZone.includes("Middle_East")) userCountry = "العراق"; 
+            else {
+                // إذا كان الزائر أجنبي، نترجم اسم الدولة بناءً على رمز البلد
+                const region = new Intl.Locale(navigator.language).region;
+                if (region) {
+                    const regionNames = new Intl.DisplayNames(['ar'], { type: 'region' });
+                    userCountry = regionNames.of(region) || "العراق";
+                }
+            }
+        }
+    } catch (e) {
+        userCountry = "العراق";
+    }
+
+    // دالة إرسال الإشارة مباشرة لملف PHP
+    function sendPing(isPing = 0) {
+        fetch('track.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            // يتم إرسال اسم الصفحة واسم الدولة المجلوب هنا مباشرة للسيرفر
+            body: `page=${encodeURIComponent(pageTitle)}&country=${encodeURIComponent(userCountry)}&ping=${isPing}`
+        });
+    }
+
+    // إرسال الإشارة الأولى فور الدخول
+    sendPing(0);
+
+    // تحديث النشاط كل 15 ثانية للتأكد من حالة (نشط)
+    let activityTimeout;
+    function resetActivity() {
+        clearTimeout(activityTimeout);
+        activityTimeout = setTimeout(() => {
+            sendPing(1); 
+            resetActivity();
+        }, 15000); 
+    }
+
+    window.addEventListener('mousemove', resetActivity);
+    window.addEventListener('keypress', resetActivity);
+    window.addEventListener('scroll', resetActivity);
+    resetActivity();
+</script>
+
+
+
+
+
+
+
+
+
+
+  
   <style>
     :root {
       --bg: #f4f7fb;
